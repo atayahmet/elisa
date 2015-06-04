@@ -1,8 +1,5 @@
 <?php
 
-namespace Layout;
-
-use Layout\Filesystem;
 
 /**
  * Elisa Template Engine
@@ -20,38 +17,55 @@ class Elisa {
      * 
      * @var object
      */
-	protected static $filesystem;
+	protected $filesystem;
 		
 	/**
      * Raw data variable
      * 
      * @var string
      */
-	protected static $data;
+	protected $data;
 	
 	/**
      * Converted data storage path
      * 
      * @var string
      */
-	protected static $storage;
+	protected $storage;
 	
 	/**
      * Raw data path
      * 
      * @var string
      */
-	protected static $view;
+	protected $view;
 	
 	/**
-   #FFFFFF  * Elisa Regex patterns
+     * Elisa Regex patterns
      * 
      * @var string
      */
-	protected static $tags = [
-		'if' => ['\{(\s?)(if)(\s?)\((.*?)\)(\s?)\}']
+	protected $tags = [
+		'\{(\s*)(if)(\s*)\((.*?)\)(\s*)\}' => '<?php $2($4): ?>',
+		'\{(\s*)(elseif)(\s*)\((.*?)\)(\s*)\}' => '<?php $2($4): ?>',
+		'\{(\s*)(endif)(\s*)\}' => '<?php $2; ?>',
+		'\{(\s*)(else)(\s*)\}' => '<?php $2: ?>',
+		
+		'\{(\s*)for\((.*?)\)(\s*)\}',
+		'\{(\s*)endfor(\s*)\}',
+		'\{(\s*)(foreach)\((.*?)\)(\s*)\}',
+		'\{(\s*)(endforeach)(\s*)\}',
+		'\{(\s*)(endeach)(\s*)\}',
+		'\{(\s*)\$+[a-z](\s?)\}'
+
 	];
 	
+	protected $replaced = [
+
+
+
+	];
+
 	 /**
      * Raw data render
      *
@@ -59,44 +73,64 @@ class Elisa {
      * @param $attr array
      * @return string
      */
-	public static function render($tpl, array $attr)
+	public function render($tpl, array $attr)
 	{
-		static::$data = $tpl;
+		$this->data = $tpl;
 
-		//Filesystem::put();
-		foreach(static::$tags as $type => $tag) {
+		foreach($this->tags as $pattern => $tag) {
 
-			preg_match_all('/' . $tag[0] . '/',$tpl, $matches);
+			preg_match_all('/' . $pattern . '/',$tpl, $matches);
 			
-			$filtredMatches = static::filterMutliArray($matches);
-			
-			foreach($matches[4] as $multiMatch){
-				$replacedTpl = preg_replace('/\{(\s?)(if)(\s?)\(' . preg_quote($multiMatch) . '\)(\s?)\}/', '<?php if(' . $multiMatch . '): ?>', static::$data);	
-				$replacedTpl = preg_replace('/\{(\s?)endif(\s?)\}/', '<?php endif; ?>', $replacedTpl);
-				$replacedTpl = preg_replace('/\{(\s?)else(\s?)\}/', '<?php else: ?>', $replacedTpl);
-				
-				static::$data = $replacedTpl;
+			$filtredMatches = $this->filterMutliArray($matches);
 
-				$replacedTpl = '';
+			if(isset($filtredMatches[0]) && is_array($filtredMatches[0])) {
+
+				foreach($filtredMatches[0] as $matchedTag) {
+					$replacedTag = preg_replace(
+						[
+							'/'.$pattern.'/'
+							// '/\{/', 
+							// '/\}/', 
+							// '/\)/', 
+							// '/endif/i', 
+							// '/else \?\>$/i',
+							// '/endfor(\s*)\?\>/i',
+							// '/endforeach(\s*)\?\>/i',
+							// '/endeach(\s*)\?\>/i',
+							// '/\<\?php(\s*)(\$(.*?))(\s*)\?\>/i',
+							// '/\s+/'
+						],
+						[
+							$tag
+						], $matchedTag);
+					
+					$this->data  = preg_replace('/' . preg_quote($matchedTag) . '/', $replacedTag, $this->data);
+				}
 			}
-
-			file_put_contents(__DIR__ . '/test.php', static::$data);
-			
-			foreach($attr as $var => $value){
-				$$var = $value;
-			}
-
-			include 'test.php';
 		}
+
+		file_put_contents(__DIR__ . '/test.php', $this->data);
+		
+		foreach($attr as $var => $value){
+			$$var = $value;
+		}
+
+		include 'test.php';
+
 	}
 	
+	protected function renderIf()
+	{
+
+	}
+
 	/**
      * Filter multi array
      *
      * @param $matches array
      * @return array
      */
-	protected static function filterMutliArray(array $matches)
+	protected function filterMutliArray(array $matches)
 	{
 		$forMulti = function(array $matched) {
 			foreach($matched as $key => $m){
@@ -125,7 +159,7 @@ class Elisa {
      * @param $path string
      * @return void
      */
-	public static function storage($path)
+	public function storage($path)
 	{
 		static::existsDir($path, 'storage');
 		
@@ -138,14 +172,14 @@ class Elisa {
      * @param $path string
      * @return void
      */
-	public static function view($path)
+	public function view($path)
 	{
 		static::existsDir($path, 'view');
 		
 		static::$view = $path;
 	}
 	
-	protected static function existsDir($path, $dirName = false)
+	protected function existsDir($path, $dirName = false)
 	{
 		if(! file_exists($path)) {
 			if($dirName){
