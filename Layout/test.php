@@ -13,7 +13,7 @@
 
 	<?php endif; ?>
 
-	{ for($i=1; $i <= 5; $i++) }
+	<?php for($i=1; $i <= 5; $i++): ?>
 		<?php if($i == 1): ?>
 			1
 		<?php elseif($i == 2): ?>
@@ -25,8 +25,20 @@
 		<?php elseif($i == 5): ?>
 
 		<?php endif; ?>
-	{ endfor }
+	<?php endfor; ?>
 
-	{ foreach([1,2,3,4,5] as $num) }
-		{ $num }
-	{ endeach }
+	<?php foreach([1,2,3,4,5] as $num): ?>
+		<?php echo  $num ; ?>
+	<?php endforeach; ?>
+
+	<?php echo $g; ?>
+
+	<?php var_dump([1,2,3,4,5]);?>
+
+	<?php echo strlen($g); ?>
+
+	<?php echo  "Elisaaaaa"; ?>
+
+	<?php while($x++ <= 10): ?>
+	<?php echo  $x; ?>
+	<?php endwhile; ?>

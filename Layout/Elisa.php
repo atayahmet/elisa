@@ -11,7 +11,9 @@
  * @license   http://opensource.org/licenses/MIT MIT license
  * @link      http://www.atayahmet.com
  */
-class Elisa { 
+class Elisa {
+
+	protected $separator = DIRECTORY_SEPARATOR;
 	/**
      * Filesystem class
      * 
@@ -50,14 +52,16 @@ class Elisa {
 		'\{(\s*)(elseif)(\s*)\((.*?)\)(\s*)\}' => '<?php $2($4): ?>',
 		'\{(\s*)(endif)(\s*)\}' => '<?php $2; ?>',
 		'\{(\s*)(else)(\s*)\}' => '<?php $2: ?>',
-		
-		'\{(\s*)for\((.*?)\)(\s*)\}',
-		'\{(\s*)endfor(\s*)\}',
-		'\{(\s*)(foreach)\((.*?)\)(\s*)\}',
-		'\{(\s*)(endforeach)(\s*)\}',
-		'\{(\s*)(endeach)(\s*)\}',
-		'\{(\s*)\$+[a-z](\s?)\}'
-
+		'\{(\s*)(for)\((.*?)\)(\s*)\}' => '<?php $2($3): ?>',
+		'\{(\s*)(endfor)(\s*)\}' => '<?php $2; ?>',
+		'\{(\s*)(foreach)\((.*?)\)(\s*)\}' => '<?php $2($3): ?>',
+		'\{(\s*)(endforeach)(\s*)\}' => '<?php $2; ?>',
+		'\{(\s*)(while)\((.*?)\)(\s*)\}' => '<?php $2($3): ?>',
+		'\{(\s*)(endwhile)(\s*)\}' => '<?php $2; ?>',
+		'\{(\s*)(endeach)(\s*)\}' => '<?php $2; ?>',
+		'\{(\s*)\$+(.*?)(\s?)\}' => '<?php echo $$2; ?>',
+		'\{(\s*)(([a-z_]+)\((.*?)\))\}' => '<?php $2;?>',
+		'\{(\s*)\!(.*?)\}' => '<?php echo $2; ?>'
 	];
 	
 	protected $replaced = [
@@ -73,7 +77,7 @@ class Elisa {
      * @param $attr array
      * @return string
      */
-	public function render($tpl, array $attr)
+	public function render($tpl)
 	{
 		$this->data = $tpl;
 
@@ -88,17 +92,7 @@ class Elisa {
 				foreach($filtredMatches[0] as $matchedTag) {
 					$replacedTag = preg_replace(
 						[
-							'/'.$pattern.'/'
-							// '/\{/', 
-							// '/\}/', 
-							// '/\)/', 
-							// '/endif/i', 
-							// '/else \?\>$/i',
-							// '/endfor(\s*)\?\>/i',
-							// '/endforeach(\s*)\?\>/i',
-							// '/endeach(\s*)\?\>/i',
-							// '/\<\?php(\s*)(\$(.*?))(\s*)\?\>/i',
-							// '/\s+/'
+							'/'.$pattern.'/i'
 						],
 						[
 							$tag
@@ -108,20 +102,41 @@ class Elisa {
 				}
 			}
 		}
+		return $this->data;
+	}
 
-		file_put_contents(__DIR__ . '/test.php', $this->data);
+	protected function controller($path, array $params)
+	{
+		$filePath = preg_replace('/\./', $this->separator, $path);
+		$fullPath = preg_replace('/\/\//', $this->separator, $this->storage . '/views/' . $filePath) . '.html';
+
+		if(! file_exists($fullPath)) {
+			throw new Exception($fullPath . ' not existsing');
+		}
+
+		$rawData = file_get_contents($fullPath);
+		$cacheFileName = md5($fullPath);
+		$cacheFullPath = $this->storage . '/cache/' . $cacheFileName . '.php';
 		
-		foreach($attr as $var => $value){
+		clearstatcache();
+		
+		$modifiedDate = filemtime($fullPath);
+		$currentDate = time() - 60;
+
+		if($modifiedDate > $currentDate) {
+			$rendered = $this->render($rawData);
+			file_put_contents($cacheFullPath, $rendered);
+		}
+		
+		ob_start();
+		foreach($params as $var => $value){
 			$$var = $value;
 		}
 
-		include 'test.php';
+		include $cacheFullPath;
+		$viewData = ob_get_clean();
 
-	}
-	
-	protected function renderIf()
-	{
-
+		return $viewData;
 	}
 
 	/**
@@ -161,9 +176,15 @@ class Elisa {
      */
 	public function storage($path)
 	{
-		static::existsDir($path, 'storage');
+		$this->existsDir($path, 'storage');
 		
-		static::$storage = $path;
+		foreach(['views', 'cache'] as $repo) {
+			if(! file_exists($path.'/' . $repo)) {
+				mkdir($path.'/' . $repo);
+			}
+		}
+
+		$this->storage = $path;
 	}
 	
 	/**
@@ -172,18 +193,16 @@ class Elisa {
      * @param $path string
      * @return void
      */
-	public function view($path)
+	public function view($path, array $params)
 	{
-		static::existsDir($path, 'view');
-		
-		static::$view = $path;
+		return $this->controller($path, $params);
 	}
 	
 	protected function existsDir($path, $dirName = false)
 	{
 		if(! file_exists($path)) {
 			if($dirName){
-				throw new Exception($dirName . ' not exists');
+				throw new Exception($path.' dir not exists');
 			}
 		}
 	}
