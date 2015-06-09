@@ -1,58 +1,28 @@
-<html>
-	<head>
-		<title>Elisa Template Engine</title>
-	</head>
-	<body>
-		<h1>{! 'Hello Elisa!'}</h1>
-		<table border="1">
-			{ foreach(['Ahmet' => 'ATAY', 'Mehmet' => 'YILDIZ'] as $name => $surname) }
-			<tr>
-				<td>{! $name }</td>
-				<td>{! $surname }</td>
-			</tr>
-			{ endforeach }
-		</table>
-	</body>
-</html>
+<h1>{! 'Hello Elisa!'}</h1>
+<table border="1">
+	{ foreach(['Ahmet' => 'ATAY', 'Mehmet' => 'YILDIZ'] as $name => $surname) }
+	<tr>
+		<td>{! $name }</td>
+		<td>{! $surname }</td>
+	</tr>
+	{ endforeach }
+</table>
 
-{ if($name == 'Ahmet' || $name = 'Mehmet') }
-		Ahmet
-{ elseif($name == 'Ahmet') }
+{ @append(header) }
+hello body
 
-{ else }
-	isim yok
-{ endif }
+sdfsd fsdfsd fsd
+{ @end }
 
-{ if($surname == 'ATAY') }
+{ @append(header) }
+hello
 
-{ endif }
+elisa
+{ @end }
 
-{ for($i=1; $i <= 5; $i++) }
-	{ if($i == 1) }
-			1
-	{ elseif($i == 2) }
-			2
-	{ elseif($i == 3) }
-			3
-	{ elseif($i == 4) }
-			4
-	{ elseif($i == 5) }
 
-	{endif}
-{ endfor }
+{ @append(footer) }
+hello
 
-{ foreach([1,2,3,4,5] as $num) }
-		{! $num }
-{ endforeach }
-
-{$g}
-
-{var_dump([1,2,3,4,5])}
-
-{!strlen($g)}
-
-{! "Elisaaaaa"}
-
-{while($x++ <= 10)}
-{! $x}
-{endwhile}
+footer
+{ @end }

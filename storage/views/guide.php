@@ -1,19 +1,8 @@
-<html>
-	<head>
-		<title>Elisa Template Engine</title>
-	</head>
-	<body>
-		<h1>{! 'Hello Elisaaa!'}</h1>
-		<table border="1">
-			{ foreach(['Ahmet' => 'ATAY', 'Mehmet' => 'YILDIZ'] as $name => $surname) }
-			<tr>
-				<td>{! $name }</td>
-				<td>{! $surname }</td>
-			</tr>
-			{ endforeach }
-		</table>
-	</body>
-</html>
+{! '8 haziran pazartesi'}
+
+{ @section('test.index') }
+
+{ @end }
 
 { if($name == 'Ahmet' || $name = 'Mehmet') }
 		Ahmet

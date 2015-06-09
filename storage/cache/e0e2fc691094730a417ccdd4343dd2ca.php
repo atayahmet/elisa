@@ -14,6 +14,11 @@
 		</table>
 	</body>
 </html>
+<?php echo  '8 haziran pazartesi'; ?>
+
+{ @section('test.index') }
+
+{ @end }
 
 <?php if($name == 'Ahmet' || $name = 'Mehmet'): ?>
 		Ahmet
