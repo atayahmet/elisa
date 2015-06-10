@@ -8,8 +8,11 @@
 	{ endforeach }
 </table>
 
+{ $hello = 'test' }
+{! $hello }
+
 { @append(header) }
-hello body
+hello body gds df gdf gdf gdf
 
 sdfsd fsdfsd fsd
 { @end }
@@ -22,13 +25,16 @@ elisa
 
 
 { @append(footer) }
+{ @extend('test2.extend3') }
 hello
 
 footer
 
 <script type="text/javascript">
 
-			alert('hello elisaaaa');
+			//alert('test 2');
 
 			</script>
 { @end }
+
+{ @extend('test2.extend') }

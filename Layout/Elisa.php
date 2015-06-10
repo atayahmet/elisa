@@ -1,6 +1,5 @@
 <?php
 
-
 /**
  * Elisa Template Engine
  * 
@@ -42,8 +41,22 @@ class Elisa {
      */
 	protected $view;
 
+	/**
+     * Default template file extension
+     * 
+     * @var string
+     */
 	protected $ext = '.html';
+
+	/**
+     * Default master file
+     * 
+     * @var string
+     */
 	protected $master = 'master';
+
+	protected $caching = true;
+
 	/**
      * Elisa Regex patterns
      * 
@@ -61,27 +74,18 @@ class Elisa {
 		'\{(\s*)(while)\((.*?)\)(\s*)\}' => '<?php $2($3): ?>',
 		'\{(\s*)(endwhile)(\s*)\}' => '<?php $2; ?>',
 		'\{(\s*)(endeach)(\s*)\}' => '<?php $2; ?>',
-		'\{(\s*)\$+(.*?)(\s?)\}' => '<?php echo $$2; ?>',
+		'\{(\s*)\$+(.*?)(\s?)\}' => '<?php $$2; ?>',
 		'\{(\s*)(([a-z_]+)\((.*?)\))\}' => '<?php $2;?>',
 		'\{(\s*)\!(.*?)\}' => '<?php echo $2; ?>',
 		'\{(\s*)\@section\((.*?)\)(\s*)\}\n*(.*?)(\n*)\{(\s*)\@end(\s*)\}'
 	];
-	
-	protected $elisaFuncs = [
-		'\{\s*\@content\s*\}'
-	];
 
-	protected $replaced = [
-
-
-
-	];
-
-	 /**
+	/**
      * Raw data render
      *
      * @param $tpl string
      * @param $attr array
+     * 
      * @return string
      */
 	public function render($tpl)
@@ -112,22 +116,82 @@ class Elisa {
 		return $this->data;
 	}
 
+	protected function extendFiles($stream)
+	{
+		$extendPattern = '\{\s*\@extend\([\'\"]?(.*?)[\'\"]?\)\s*\}';
+		preg_match_all('/' . $extendPattern . '/', $stream, $matches);
+
+		if(isset($matches[1]) && is_array($matches[1])) {
+
+			foreach ($matches[1] as $key => $path) {
+				
+				$filePath = $this->setSeparator($path);
+				$fullPath = $this->setFullViewPath($filePath);
+
+				if(! file_exists($fullPath)) {
+					throw new Exception($fullPath . ' not existsing');
+				}
+
+				$stream = str_replace($matches[0][$key], $this->render(file_get_contents($fullPath)), $stream);
+
+				preg_match_all('/' . $extendPattern . '/', $stream, $nestedMatches);
+
+				if(isset($nestedMatches[1]) && is_array($nestedMatches[1])) {
+					$stream = $this->extendFiles($stream);
+				}
+
+			}
+		}
+
+		return $stream;
+	}
+
+	/**
+     * Replace dot from to default separator
+     *
+     * @param $path string
+     *
+     * @return string
+     */
 	protected function setSeparator($path)
 	{
 		return preg_replace('/\./', $this->separator, $path);
 	}
 
+	/**
+     * Make the view file path
+     *
+     * @param $filePath string
+     *
+     * @return string
+     */
 	protected function setFullViewPath($filePath)
 	{
 		return preg_replace('/\/\//', $this->separator, $this->storage . '/views/' . $filePath) . $this->ext;
 	}
 
+	/**
+     * Make the cache file path
+     *
+     * @param $filePath string
+     *
+     * @return string
+     */
 	protected function setFullCachePath($cacheFileName)
 	{
 		return $this->storage . '/cache/' . $cacheFileName . '.php';
 	}
 
-	protected function controller($path, array $params = [], $caching = true)
+	/**
+     * controller of multi process
+     *
+     * @param $path string
+     * @param $params array
+     * @param $caching bool
+     *
+     * @return string
+     */
+	protected function controller($path, array $params = [])
 	{
 		$filePath = $this->setSeparator($path);
 		$fullPath = $this->setFullViewPath($filePath);
@@ -135,11 +199,11 @@ class Elisa {
 		if(! file_exists($fullPath)) {
 			throw new Exception($fullPath . ' not existsing');
 		}
-		
+
 		$cacheFileName = md5($fullPath);
 		$cacheFullPath = $this->setFullCachePath($cacheFileName);
 
-		if($caching) {
+		if($this->caching && file_exists($cacheFullPath) === true) {
 			$this->writeToCacheIfExpired($cacheFullPath, $fullPath);
 			return $this->includeCache($cacheFullPath, $params);
 		}else{
@@ -148,6 +212,14 @@ class Elisa {
 		}
 	}
 
+	/**
+     * Write to cache file if expired
+     *
+     * @param $cacheFullPath string
+     * @param $fullPath string
+     *
+     * @return void
+     */
 	protected function writeToCacheIfExpired($cacheFullPath, $fullPath)
 	{
 		clearstatcache();
@@ -162,6 +234,19 @@ class Elisa {
 		}
 	}
 
+	protected function writeToCache($cacheFullPath, $renderedData)
+	{
+		return file_put_contents($cacheFullPath, $renderedData);
+	}
+
+	/**
+     * Include cache file
+     *
+     * @param $cacheFullPath string
+     * @param $params array
+     *
+     * @return string
+     */
 	protected function includeCache($cacheFullPath, array $params = [])
 	{
 		ob_start();
@@ -196,8 +281,6 @@ class Elisa {
 		foreach($matches as $key => $matched){
 			if(is_array($matched)) {
 				$matches[$key] = $forMulti($matched);
-			}else{
-				
 			}
 		}
 		return $matches;
@@ -222,6 +305,13 @@ class Elisa {
 		$this->storage = $path;
 	}
 	
+	/**
+     * Set the files extension
+     *
+     * @param $ext string
+     *
+     * @return void
+     */
 	public function ext($ext = false)
 	{
 		if(preg_match('/^\.[a-zA-Z]+$/i', $ext)) {
@@ -229,12 +319,49 @@ class Elisa {
 		}
 	}
 
+	/**
+     * Set the master file
+     *
+     * @param $master string
+     *
+     * @return void
+     */
 	public function master($master = false)
 	{
 		$this->master = $master ? $master : $this->master;
 	}
 
-	public function composer($path, array $params = [])
+	/**
+     * Clear cache file if any different
+     *
+     * @param $cacheFullPath string
+     *
+     * @return void
+     */
+	protected function clearCacheIfRefreshed($contentFilePath, $cacheFullPath)
+	{
+		if(file_exists($contentFilePath) === true && file_exists($cacheFullPath) === true) {
+
+			clearstatcache();
+		
+			$modifiedDate = filemtime($contentFilePath);
+			$currentDate  = time() - 60;
+
+			if($modifiedDate > $currentDate) {
+				unlink($cacheFullPath);
+			}
+		}
+	}
+
+	/**
+     * Generate from template file to php file 
+     *
+     * @param $path string
+     * @param $params array
+     *
+     * @return string
+     */
+	public function composer($path, array $params = [], $show = false)
 	{
 		$masterPage = $this->storage . '/views/' . $this->setSeparator($this->master);
 
@@ -242,6 +369,26 @@ class Elisa {
 			throw new Exception($masterPage . $this->ext . ' not existsing');
 		}
 
+		$contentFilePath = $this->setSeparator($path);
+		$contentFileFullPath = $this->setFullViewPath($contentFilePath);
+
+		$cacheFileName = md5($contentFileFullPath);
+		$cacheFullPath = $this->setFullCachePath($cacheFileName);
+
+		$this->clearCacheIfRefreshed($contentFileFullPath, $cacheFullPath);
+
+		// caching scenario
+		if($this->caching && file_exists($cacheFullPath) === true) {
+
+			$cacheData = $this->includeCache($cacheFullPath, $params);
+
+			if($show) {
+				echo $cacheData;
+			}
+			return $cacheData;
+		}
+
+		// without caching scenario
 		$content = $this->controller($path, $params, false);
 		$master = $this->controller($this->master, $params, false);
 		$master = preg_replace('/\{\s*\@content\s*\}/', $content, $master);
@@ -268,23 +415,53 @@ class Elisa {
 				$master = preg_replace('/' . sprintf($sectionPattern, $tag) . '/i', $rawData[$tag], $master);
 			}
 
-			echo '<pre>';
-			exit(var_dump($master));
-			
+			$master = preg_replace('/(\n{2,})/',"\n", $master);
+			$master = $this->extendFiles($master);
+
+			$this->writeToCache($cacheFullPath, $master);
+			$viewData = $this->includeCache($cacheFullPath, $params);
+
+			if($show) {
+				echo $viewData;
+			}
+			return $viewData;
 		}
 	}
 
 	/**
-     * Set raw data path
+     * Get view file
      *
      * @param $path string
-     * @return void
+     * @param $params array
+     * 
+     * @return string
      */
 	public function view($path, array $params)
 	{
-		return $this->controller($path, $params);
+		return $this->getContent($path, $params);
+	}
+
+	/**
+     * Show view file
+     *
+     * @param $path string
+     * @param $params array
+     * 
+     * @return string
+     */
+	public function show($path, array $params)
+	{
+		echo $this->getContent($path, $params);
 	}
 	
+	/**
+     * Check the directory
+     *
+     * @param $path string
+     * @param $dirName bool
+     * 
+     * @return void|Exception
+     */
 	protected function existsDir($path, $dirName = false)
 	{
 		if(! file_exists($path)) {
@@ -292,5 +469,17 @@ class Elisa {
 				throw new Exception($path.' dir not exists');
 			}
 		}
+	}
+
+	protected function getContent($path, array $params)
+	{
+		$contentFilePath = $this->setSeparator($path);
+		$contentFileFullPath = $this->setFullViewPath($contentFilePath);
+
+		if(! file_exists($contentFileFullPath)) {
+			throw new Exception($contentFileFullPath . ' not existsing');
+		}
+
+		return $this->includeCache($contentFilePath, $params);
 	}
 }
