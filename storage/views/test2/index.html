@@ -11,6 +11,10 @@
 { $hello = 'test' }
 {! $hello }
 
+{! @uzunluk('hello') }
+
+{! @isnum('hello') }
+
 { @append(header) }
 hello body gds df gdf gdf gdf
 
@@ -38,3 +42,5 @@ footer
 { @end }
 
 { @extend('test2.extend') }
+
+(\{\s*\@*([A-Z])([a-zA-Z]*)\((.*?)\)\s*\})

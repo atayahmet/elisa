@@ -56,6 +56,8 @@ class Elisa {
 	protected $master = 'master';
 
 	protected $caching = true;
+	protected $aliases = [];
+	protected $reserved = ['extend', 'append'];
 
 	/**
      * Elisa Regex patterns
@@ -76,8 +78,7 @@ class Elisa {
 		'\{(\s*)(endeach)(\s*)\}' => '<?php $2; ?>',
 		'\{(\s*)\$+(.*?)(\s?)\}' => '<?php $$2; ?>',
 		'\{(\s*)(([a-z_]+)\((.*?)\))\}' => '<?php $2;?>',
-		'\{(\s*)\!(.*?)\}' => '<?php echo $2; ?>',
-		'\{(\s*)\@section\((.*?)\)(\s*)\}\n*(.*?)(\n*)\{(\s*)\@end(\s*)\}'
+		'\{(\s*)\!(.*?)\}' => '<?php echo $2; ?>'
 	];
 
 	/**
@@ -90,7 +91,7 @@ class Elisa {
      */
 	public function render($tpl)
 	{
-		$this->data = $tpl;
+		$this->data = $master = $this->setAliases($tpl);
 
 		foreach($this->tags as $pattern => $tag) {
 
@@ -144,6 +145,13 @@ class Elisa {
 		}
 
 		return $stream;
+	}
+
+	protected function setAliases($stream)
+	{
+		preg_match_all('/' . sprintf('(\{\!*\s*\@*(%s)\((.*?)\)\s*\})', implode(array_flip($this->aliases), '|')) . '/i', $stream, $matches);
+
+		exit(var_dump($matches));
 	}
 
 	/**
@@ -305,6 +313,11 @@ class Elisa {
 		$this->storage = $path;
 	}
 	
+	public function aliases($aliases)
+	{
+		$this->aliases = array_merge($this->aliases, $aliases);
+	}
+
 	/**
      * Set the files extension
      *
