@@ -55,9 +55,26 @@ class Elisa {
      */
 	protected $master = 'master';
 
+	/**
+     * Caching status
+     * 
+     * @var bool
+     */
 	protected $caching = true;
+
+	/**
+     * Function aliases
+     * 
+     * @var array
+     */
 	protected $aliases = [];
-	protected $reserved = ['extend', 'append'];
+
+	/**
+     * Function aliases
+     * 
+     * @var array
+     */
+	protected $reserved = ['extend', 'append', 'content'];
 
 	/**
      * Elisa Regex patterns
@@ -77,7 +94,7 @@ class Elisa {
 		'\{(\s*)(endwhile)(\s*)\}' => '<?php $2; ?>',
 		'\{(\s*)(endeach)(\s*)\}' => '<?php $2; ?>',
 		'\{(\s*)\$+(.*?)(\s?)\}' => '<?php $$2; ?>',
-		'\{(\s*)(([a-z_]+)\((.*?)\))\}' => '<?php $2;?>',
+		'(\{\s*(?!\!\@)(([a-z_]+)\(.*?\))\s*\})' => '<?php $2;?>',
 		'\{(\s*)\!(.*?)\}' => '<?php echo $2; ?>'
 	];
 
@@ -89,14 +106,13 @@ class Elisa {
      * 
      * @return string
      */
-	public function render($tpl)
+	protected function render($tpl)
 	{
-		$this->data = $master = $this->setAliases($tpl);
+		$this->data = $this->setAliases($tpl);
 
 		foreach($this->tags as $pattern => $tag) {
 
-			preg_match_all('/' . $pattern . '/',$tpl, $matches);
-			
+			preg_match_all('/' . $pattern . '/',$this->data, $matches);
 			$filtredMatches = $this->filterMutliArray($matches);
 
 			if(isset($filtredMatches[0]) && is_array($filtredMatches[0])) {
@@ -117,6 +133,13 @@ class Elisa {
 		return $this->data;
 	}
 
+	/**
+     * Make the extend files (recursive)
+     *
+     * @param $strem string
+     * 
+     * @return string
+     */
 	protected function extendFiles($stream)
 	{
 		$extendPattern = '\{\s*\@extend\([\'\"]?(.*?)[\'\"]?\)\s*\}';
@@ -140,18 +163,33 @@ class Elisa {
 				if(isset($nestedMatches[1]) && is_array($nestedMatches[1])) {
 					$stream = $this->extendFiles($stream);
 				}
-
 			}
 		}
 
 		return $stream;
 	}
 
+	/**
+     * Replace the aliases funcion name
+     *
+     * @param $strem string
+     * 
+     * @return string
+     */
 	protected function setAliases($stream)
 	{
-		preg_match_all('/' . sprintf('(\{\!*\s*\@*(%s)\((.*?)\)\s*\})', implode(array_flip($this->aliases), '|')) . '/i', $stream, $matches);
+		preg_match_all('/' . sprintf('(\{\!*\s*.*?\@*(%s)\((.*?)\)\s*\})', implode(array_flip($this->aliases), '|')) . '/i', $stream, $matches);
 
-		exit(var_dump($matches));
+		if(isset($matches[2]) && is_array($matches[2])) {
+			foreach($matches[2] as $key => $func) {
+				if( isset($this->aliases[$func])) {
+					$pattern = sprintf('((\{\!*\s*)(.*?)(\@*(%s)\((.*?)\))(\s*\}))', $func);
+					$replacement = sprintf('$2$3%s(%s)$7', $this->aliases[$func], $matches[3][$key]);
+					$stream = preg_replace('/' . $pattern . '/i', $replacement, $stream);
+				}
+			}
+		}
+		return $stream;
 	}
 
 	/**
@@ -242,6 +280,14 @@ class Elisa {
 		}
 	}
 
+	/**
+     * Write to cache
+     *
+     * @param $cacheFullPath string
+     * @param $renderedData string
+     *
+     * @return int
+     */
 	protected function writeToCache($cacheFullPath, $renderedData)
 	{
 		return file_put_contents($cacheFullPath, $renderedData);
@@ -313,6 +359,12 @@ class Elisa {
 		$this->storage = $path;
 	}
 	
+	/**
+     * Save the function names aliases
+     *
+     * @param $path string
+     * @return void
+     */
 	public function aliases($aliases)
 	{
 		$this->aliases = array_merge($this->aliases, $aliases);
@@ -342,6 +394,13 @@ class Elisa {
 	public function master($master = false)
 	{
 		$this->master = $master ? $master : $this->master;
+	}
+
+	public function cache($status = null)
+	{
+		if(is_bool($status)) {
+			$this->caching = $status;
+		}
 	}
 
 	/**
@@ -417,7 +476,7 @@ class Elisa {
 			foreach($matches[1] as $key => $tag) {
 				preg_match_all('/' . sprintf($sectionPattern, $tag) . '/i', $master, $tagMatches);
 				
-				if(isset($tagMatches[2]) && is_array($tagMatches[2])) {
+				if(isset($tagMatches[2]) && is_array($tagMatches[2]) && isset($tagMatches[2][0])) {
 					$rawData[$tag] = (isset($rawData[$tag]) ? $rawData[$tag] . "\n" .$matches[2][$key] : $tagMatches[2][0] . "\n" . $matches[2][$key]);
 				}
 			}
@@ -425,20 +484,25 @@ class Elisa {
 			$master = preg_replace('/' . $appendPattern . '/i', '', $master);
 
 			foreach($matches[1] as $key => $tag) {
-				$master = preg_replace('/' . sprintf($sectionPattern, $tag) . '/i', $rawData[$tag], $master);
+				if(isset($rawData[$tag])) {
+					$master = preg_replace('/' . sprintf($sectionPattern, $tag) . '/i', $rawData[$tag], $master);
+				}
 			}
 
 			$master = preg_replace('/(\n{2,})/',"\n", $master);
 			$master = $this->extendFiles($master);
 
 			$this->writeToCache($cacheFullPath, $master);
-			$viewData = $this->includeCache($cacheFullPath, $params);
-
-			if($show) {
-				echo $viewData;
-			}
-			return $viewData;
+			$master = $this->includeCache($cacheFullPath, $params);
 		}
+
+		$master = preg_replace('/' . sprintf('(\{\s*\@section\((.*?)\)\s*\}([\s\S]*?)\{\s*\@end\s*\})') . '/i', '$3', $master);
+
+		if($show) {
+			echo $master;
+			return;
+		}
+		return $master;
 	}
 
 	/**
@@ -484,6 +548,14 @@ class Elisa {
 		}
 	}
 
+	/**
+     * Get the content
+     *
+     * @param $path string
+     * @param $params array
+     * 
+     * @return Exception|string
+     */
 	protected function getContent($path, array $params)
 	{
 		$contentFilePath = $this->setSeparator($path);
