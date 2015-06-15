@@ -2,7 +2,7 @@
   "name": "atayahmet/elisa",
   "type": "library",
   "description": "Elisa is as Template Engine",
-  "keywords": ["elisa","template","","less php code"],
+  "keywords": ["elisa","template","less php code"],
   "license": "MIT",
   "authors": [
     {
