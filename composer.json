@@ -1,0 +1,25 @@
+{
+  "name": "atayahmet/elisa",
+  "type": "library",
+  "description": "Elisa is as Template Engine",
+  "keywords": ["elisa","template","","less php code"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ahmet ATAY"
+    }
+  ],
+  "require": {
+      "php": ">=5.3"
+  },
+  "require-dev": {
+      "phpunit/phpunit": "~4.7"
+  },
+  "autoload": {
+    "psr-4": {
+        "": "src",
+        "Glad\\": "tests/"
+      }
+  },
+  "version": "1.0.0-dev"
+}

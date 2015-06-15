@@ -1,5 +1,7 @@
 <?php
 
+namespace Elisa;
+
 /**
  * Elisa Template Engine
  * 
