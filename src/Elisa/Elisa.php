@@ -78,27 +78,55 @@ class Elisa {
      */
 	protected $reserved = ['extend', 'append', 'content'];
 
+	protected $open = '{';
+	protected $close = '}';
+
 	/**
      * Elisa Regex patterns
      * 
      * @var string
      */
 	protected $tags = [
-		'\{(\s*)(if)(\s*)\((.*?)\)(\s*)\}' => '<?php $2($4): ?>',
-		'\{(\s*)(elseif)(\s*)\((.*?)\)(\s*)\}' => '<?php $2($4): ?>',
-		'\{(\s*)(endif)(\s*)\}' => '<?php $2; ?>',
-		'\{(\s*)(else)(\s*)\}' => '<?php $2: ?>',
-		'\{(\s*)(for)\((.*?)\)(\s*)\}' => '<?php $2($3): ?>',
-		'\{(\s*)(endfor)(\s*)\}' => '<?php $2; ?>',
-		'\{(\s*)(foreach)\((.*?)\)(\s*)\}' => '<?php $2($3): ?>',
-		'\{(\s*)(endforeach)(\s*)\}' => '<?php $2; ?>',
-		'\{(\s*)(while)\((.*?)\)(\s*)\}' => '<?php $2($3): ?>',
-		'\{(\s*)(endwhile)(\s*)\}' => '<?php $2; ?>',
-		'\{(\s*)(endeach)(\s*)\}' => '<?php $2; ?>',
-		'\{(\s*)\$+(.*?)(\s?)\}' => '<?php $$2; ?>',
-		'(\{\s*(?!\!\@)(([a-z_]+)\(.*?\))\s*\})' => '<?php $2;?>',
-		'\{(\s*)\!(.*?)\}' => '<?php echo $2; ?>'
+		"%s(\s*)(if)(\s*)\((.*?)\)(\s*)%s" => '<?php $2($4): ?>',
+		'%s(\s*)(elseif)(\s*)\((.*?)\)(\s*)%s' => '<?php $2($4): ?>',
+		'%s(\s*)(endif)(\s*)%s' => '<?php $2; ?>',
+		'%s(\s*)(else)(\s*)%s' => '<?php $2: ?>',
+		'%s(\s*)(for)\((.*?)\)(\s*)%s' => '<?php $2($3): ?>',
+		'%s(\s*)(endfor)(\s*)%s' => '<?php $2; ?>',
+		'%s(\s*)(foreach)\((.*?)\)(\s*)%s' => '<?php $2($3): ?>',
+		'%s(\s*)(endforeach)(\s*)%s' => '<?php $2; ?>',
+		'%s(\s*)(while)\((.*?)\)(\s*)%s' => '<?php $2($3): ?>',
+		'%s(\s*)(endwhile)(\s*)%s' => '<?php $2; ?>',
+		'%s(\s*)(endeach)(\s*)%s' => '<?php $2; ?>',
+		'%s(\s*)\$+(.*?)(\s?)%s' => '<?php $$2; ?>',
+		'(%s\s*(?!\!\@)(([a-z_]+)\(.*?\))\s*%s)' => '<?php $2;?>',
+		'%s(\s*)\!(.*?)%s' => '<?= $2; ?>'
 	];
+
+	public function __construct()
+	{
+		$this->tags = $this->compileTag($this->tags);
+	}
+
+	protected function compileTag($patterns)
+	{
+		$string = false;
+		$left  = preg_quote($this->open);
+		$right = preg_quote($this->close);
+
+		if(! is_array($patterns)) {
+			return sprintf($patterns, $left, $right);
+		}
+
+		$compiledTags = [];
+		
+		foreach($patterns as $pattern => $replacement) {
+			$pattern = sprintf($pattern, $left, $right);
+			$compiledTags[$pattern] = $replacement;
+		}
+
+		return $compiledTags;
+	}
 
 	/**
      * Raw data render
