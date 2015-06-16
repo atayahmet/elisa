@@ -2,13 +2,19 @@
   "name": "atayahmet/elisa",
   "type": "library",
   "description": "Elisa is as Template Engine",
+  "homepage": "https://github.com/atayahmet/elisa",
   "keywords": ["elisa","template","less php code"],
   "license": "MIT",
   "authors": [
     {
-      "name": "Ahmet ATAY"
+      "name": "Ahmet ATAY",
+      "email": "ahmet.atay@hotmail.com",
+      "homepage": "http://www.atayahmet.com"
     }
   ],
+  "support": {
+    "issues": "https://github.com/atayahmet/elisa/issues"
+  },
   "require": {
       "php": ">=5.3"
   },
@@ -16,10 +22,11 @@
       "phpunit/phpunit": "~4.7"
   },
   "autoload": {
-    "psr-4": {
-        "": "src",
-        "Elisa\\": "tests/"
-      }
+    "psr-0": {
+      "": "src",
+      "Elisa": "tests"
+
+    }
   },
   "extra": {
     "branch-alias": {
