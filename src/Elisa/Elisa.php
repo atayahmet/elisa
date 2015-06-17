@@ -15,6 +15,7 @@ namespace Elisa;
 class Elisa {
 
 	protected $separator = DIRECTORY_SEPARATOR;
+
 	/**
      * Filesystem class
      * 
@@ -78,7 +79,18 @@ class Elisa {
      */
 	protected $reserved = ['extend', 'append', 'content'];
 
+	/**
+     * Start tag
+     * 
+     * @var string
+     */
 	protected $open = '{';
+
+	/**
+     * End tag
+     * 
+     * @var string
+     */
 	protected $close = '}';
 
 	/**
@@ -106,6 +118,17 @@ class Elisa {
 	public function __construct()
 	{
 		$this->tags = $this->compileTag($this->tags);
+	}
+
+	protected function extend($filePath, array $params = [], $show = true)
+	{
+		$extendData = $this->includeCache($this->setFullCachePathWithMd5($filePath), $params);
+
+		if($show === true) {
+			echo $extendData;
+			return;
+		}
+		return $extendData;
 	}
 
 	protected function compileTag($patterns)
@@ -172,9 +195,11 @@ class Elisa {
      */
 	protected function extendFiles($stream)
 	{
-		$extendPattern = '\{\s*\@extend\([\'\"]?(.*?)[\'\"]?\)\s*\}';
-		preg_match_all('/' . $extendPattern . '/', $stream, $matches);
+		//$extendPattern = $this->compileTag('%s\s*\@extend\([\'\"]?(.*?)[\'\"]?\)\s*%s');
 
+		$extendPattern = $this->compileTag('%s\s*\@extend\([\'\"]?(.*?)[\'\"]\s*(,)?(.*?)\s*\)\s*%s');
+		preg_match_all('/' . $extendPattern . '/', $stream, $matches);
+		
 		if(isset($matches[1]) && is_array($matches[1])) {
 
 			foreach ($matches[1] as $key => $path) {
@@ -183,11 +208,20 @@ class Elisa {
 				$fullPath = $this->setFullViewPath($filePath);
 
 				if(! file_exists($fullPath)) {
-					throw new Exception($fullPath . ' not existsing');
+					throw new \Exception($fullPath . ' not existsing');
 				}
 
-				$stream = str_replace($matches[0][$key], $this->render(file_get_contents($fullPath)), $stream);
+				//exit($this->setFullCachePath($path));
+				// $this->render(file_get_contents($fullPath))
 
+				$this->writeToCache($this->setFullCachePathWithMd5($path), $this->render(file_get_contents($fullPath)));
+
+				if(isset($matches[3][$key]) && !empty($matches[3][$key])) {
+					$stream = str_replace($matches[0][$key], sprintf('<?php $_elisa->extend(\'%s\', %s); ?>', $path, $matches[3][$key]) , $stream);
+				}else{
+					$stream = str_replace($matches[0][$key], sprintf('<?php $_elisa->extend(\'%s\'); ?>', $path) , $stream);
+				}
+				
 				preg_match_all('/' . $extendPattern . '/', $stream, $nestedMatches);
 
 				if(isset($nestedMatches[1]) && is_array($nestedMatches[1])) {
@@ -195,7 +229,6 @@ class Elisa {
 				}
 			}
 		}
-
 		return $stream;
 	}
 
@@ -208,12 +241,19 @@ class Elisa {
      */
 	protected function setAliases($stream)
 	{
-		preg_match_all('/' . sprintf('(\{\!*\s*.*?\@*(%s)\((.*?)\)\s*\})', implode(array_flip($this->aliases), '|')) . '/i', $stream, $matches);
+		$aliases = implode(array_flip($this->aliases), '|');
+
+		$open  = preg_quote($this->open);
+		$close = preg_quote($this->close);
+
+		$aliasesPattern = sprintf('(%s\!*\s*.*?\@*(%s)\((.*?)\)\s*%s)', $open, $aliases, $close);
+
+		preg_match_all('/' . $aliasesPattern . '/i', $stream, $matches);
 
 		if(isset($matches[2]) && is_array($matches[2])) {
 			foreach($matches[2] as $key => $func) {
 				if( isset($this->aliases[$func])) {
-					$pattern = sprintf('((\{\!*\s*)(.*?)(\@*(%s)\((.*?)\))(\s*\}))', $func);
+					$pattern = sprintf('((%s\!*\s*)(.*?)(\@*(%s)\((.*?)\))(\s*%s))', $open, $func, $close);
 					$replacement = sprintf('$2$3%s(%s)$7', $this->aliases[$func], $matches[3][$key]);
 					$stream = preg_replace('/' . $pattern . '/i', $replacement, $stream);
 				}
@@ -255,7 +295,16 @@ class Elisa {
      */
 	protected function setFullCachePath($cacheFileName)
 	{
-		return $this->storage . '/cache/' . $cacheFileName . '.php';
+		return preg_replace('/\/\//', $this->separator, $this->storage . '/cache/' . $cacheFileName) . '.php';
+	}
+
+	protected function setFullCachePathWithMd5($path)
+	{
+		$filePath = $this->setSeparator($path);
+		$fullPath = $this->setFullViewPath($filePath);
+
+		$cacheFileName = md5($fullPath);
+		return $this->setFullCachePath($cacheFileName);
 	}
 
 	/**
@@ -273,7 +322,7 @@ class Elisa {
 		$fullPath = $this->setFullViewPath($filePath);
 
 		if(! file_exists($fullPath)) {
-			throw new Exception($fullPath . ' not existsing');
+			throw new \Exception($fullPath . ' not existsing');
 		}
 
 		$cacheFileName = md5($fullPath);
@@ -338,6 +387,8 @@ class Elisa {
 			$$var = $value;
 		}
 
+		$_elisa = $this;
+
 		include $cacheFullPath;
 		$viewData = ob_get_clean();
 
@@ -393,6 +444,7 @@ class Elisa {
      * Save the function names aliases
      *
      * @param $path string
+     *
      * @return void
      */
 	public function aliases($aliases)
@@ -465,10 +517,12 @@ class Elisa {
      */
 	public function composer($path, array $params = [], $show = false)
 	{
+		if(ob_get_level()) ob_end_clean();
+
 		$masterPage = $this->storage . '/views/' . $this->setSeparator($this->master);
 
 		if(! file_exists($masterPage . $this->ext)) {
-			throw new Exception($masterPage . $this->ext . ' not existsing');
+			throw new \Exception($masterPage . $this->ext . ' not existsing');
 		}
 
 		$contentFilePath = $this->setSeparator($path);
@@ -476,7 +530,6 @@ class Elisa {
 
 		$cacheFileName = md5($contentFileFullPath);
 		$cacheFullPath = $this->setFullCachePath($cacheFileName);
-
 		$this->clearCacheIfRefreshed($contentFileFullPath, $cacheFullPath);
 
 		// caching scenario
@@ -491,23 +544,26 @@ class Elisa {
 		}
 
 		// without caching scenario
-		$content = $this->controller($path, $params, false);
+		$content= $this->controller($path, $params, false);
 		$master = $this->controller($this->master, $params, false);
-		$master = preg_replace('/\{\s*\@content\s*\}/', $content, $master);
+		$master = preg_replace('/' . $this->compileTag('%s\s*\@content\s*%s') . '/', $content, $master);
 		
-		$appendPattern  = '\{\s*\@append\([\',\"]*(.*?)[\',\"]*\)\s*\}([\s\S]*?)\{\s*\@end\s*\}';
-		$sectionPattern = '\{\s*\@section\((%s)\)\s*\}([\s\S]*?)\{\s*\@end\s*\}';
-
+		$open  = preg_quote($this->open);
+		$close = preg_quote($this->close);
+		
+		$appendPattern = sprintf('%s\s*\@append\([\',\"]*(.*?)[\',\"]*\)\s*%s([\s\S]*?)%s\s*\@end\s*%s', $open, $close, $open, $close);
+		$sectionPattern = '%s\s*\@section\([\'\"]*(%s)[\'\"]*\)\s*%s([\s\S]*?)%s\s*\@end\s*%s';
 		preg_match_all('/' . $appendPattern . '/i', $master, $matches);
 		
 		$rawData = [];
 
 		if(isset($matches[1]) && is_array($matches[1])) {
 			foreach($matches[1] as $key => $tag) {
-				preg_match_all('/' . sprintf($sectionPattern, $tag) . '/i', $master, $tagMatches);
+
+				preg_match_all('/' . sprintf($sectionPattern, $open, $tag, $close, $open, $close) . '/i', $master, $tagMatches);
 				
 				if(isset($tagMatches[2]) && is_array($tagMatches[2]) && isset($tagMatches[2][0])) {
-					$rawData[$tag] = (isset($rawData[$tag]) ? $rawData[$tag] . "\n" .$matches[2][$key] : $tagMatches[2][0] . "\n" . $matches[2][$key]);
+					$rawData[$tag] = (isset($rawData[$tag]) ? $rawData[$tag] . PHP_EOL . $matches[2][$key] : $tagMatches[2][0] . PHP_EOL . $matches[2][$key]);
 				}
 			}
 
@@ -515,18 +571,18 @@ class Elisa {
 
 			foreach($matches[1] as $key => $tag) {
 				if(isset($rawData[$tag])) {
-					$master = preg_replace('/' . sprintf($sectionPattern, $tag) . '/i', $rawData[$tag], $master);
+					$master = preg_replace('/' . sprintf($sectionPattern, $open, $tag, $close, $open, $close) . '/i', $rawData[$tag], $master);
 				}
 			}
 
-			$master = preg_replace('/(\n{2,})/',"\n", $master);
 			$master = $this->extendFiles($master);
 
 			$this->writeToCache($cacheFullPath, $master);
 			$master = $this->includeCache($cacheFullPath, $params);
 		}
 
-		$master = preg_replace('/' . sprintf('(\{\s*\@section\((.*?)\)\s*\}([\s\S]*?)\{\s*\@end\s*\})') . '/i', '$3', $master);
+		$sectionPattern2 = sprintf('(%s\s*\@section\([\'\"]*(.*?)[\'\"]*\)\s*%s([\s\S]*?)%s\s*\@end\s*%s)', $open, $close, $open, $close);
+		$master = preg_replace(['/' . $sectionPattern2 . '/i', '/(\n{2,})/'], ['$3', PHP_EOL], $master);
 
 		if($show) {
 			echo $master;
@@ -573,7 +629,7 @@ class Elisa {
 	{
 		if(! file_exists($path)) {
 			if($dirName){
-				throw new Exception($path.' dir not exists');
+				throw new \Exception($path.' dir not exists');
 			}
 		}
 	}
@@ -592,7 +648,7 @@ class Elisa {
 		$contentFileFullPath = $this->setFullViewPath($contentFilePath);
 
 		if(! file_exists($contentFileFullPath)) {
-			throw new Exception($contentFileFullPath . ' not existsing');
+			throw new \Exception($contentFileFullPath . ' not existsing');
 		}
 
 		return $this->includeCache($contentFilePath, $params);
