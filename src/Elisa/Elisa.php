@@ -115,7 +115,7 @@ class Elisa {
      * @var object
      */
 	protected $dispatcher;
-	
+
 	/**
      * Elisa Regex patterns
      * 
@@ -144,6 +144,15 @@ class Elisa {
 		$this->dispatcher = new Dispatcher;
 	}
 
+	/**
+     * Adds the extended file
+     *
+     * @param $filePath string
+     * @param $params array
+     * @param $show bool
+     * 
+     * @return string
+     */
 	protected function extend($filePath, array $params = [], $show = true)
 	{
 		$fullViewPath  = $this->setFullViewPath($filePath);
@@ -160,6 +169,13 @@ class Elisa {
 		return $extendData;
 	}
 
+	/**
+     * Compiles the openning and closing tags
+     *
+     * @param $patterns string|array
+     * 
+     * @return array
+     */
 	protected function compileTag($patterns)
 	{
 		$string = false;
@@ -395,7 +411,7 @@ class Elisa {
 	}
 
 	/**
-     * Include cache file
+     * Adds cache file
      *
      * @param $cacheFullPath string
      * @param $params array
@@ -635,6 +651,14 @@ class Elisa {
 		return $master;
 	}
 
+	/**
+     * Sets the before event
+     *
+     * @param $name string
+     * @param $event object
+     * 
+     * @return void
+     */
 	public function beforeEvent($name = false, \Closure $event)
 	{
 		if($name) {
@@ -642,6 +666,14 @@ class Elisa {
 		}
 	}
 
+	/**
+     * Sets the after event
+     *
+     * @param $name string
+     * @param $event object
+     * 
+     * @return void
+     */
 	public function afterEvent($name = false, \Closure $event)
 	{
 		if($name) {
@@ -649,11 +681,24 @@ class Elisa {
 		}
 	}
 
+	/**
+     * Sets the after event
+     *
+     * @param $prefix string
+     * @param $name string
+     * 
+     * @return mixed
+     */
 	protected function runEvent($prefix, $name)
 	{
-		$this->dispatcher->run($prefix.'_'.$name);
+		return $this->dispatcher->run($prefix.'_'.$name);
 	}
 
+	/**
+     * Clears all cache files
+     *
+     * @return bool
+     */
 	public function clear()
 	{
 		foreach (glob($this->storage."/cache/*.php") as $file) {
@@ -693,6 +738,13 @@ class Elisa {
 		$this->runEvent('after', $path);
 	}
 	
+	/**
+     * Initializer method
+     *
+     * @param $config array
+     * 
+     * @return void
+     */
 	public function setup(array $config)
 	{
 		foreach($config as $method => $value) {
@@ -704,11 +756,25 @@ class Elisa {
 		}
 	}
 
+	/**
+     * Sets the specific parameters
+     *
+     * @param $params array
+     * 
+     * @return void
+     */
 	public function with(array $params)
 	{
 		$this->params = $params;
 	}
 
+	/**
+     * Sets the parameters send to all views
+     *
+     * @param $params array
+     * 
+     * @return void
+     */
 	public function each(array $params)
 	{
 		$this->eachParams = $params;
