@@ -2,6 +2,8 @@
 
 namespace Elisa;
 
+use Elisa\Dispatcher;
+
 /**
  * Elisa Template Engine
  * 
@@ -94,6 +96,27 @@ class Elisa {
 	protected $close = '}';
 
 	/**
+     * Params Depends
+     * 
+     * @var arrayW
+     */
+	protected $params = [];
+
+	/**
+     * Params send to each views 
+     * 
+     * @var array
+     */
+	protected $eachParams = [];
+
+	/**
+     * Event dispatcher
+     * 
+     * @var object
+     */
+	protected $dispatcher;
+	
+	/**
      * Elisa Regex patterns
      * 
      * @var string
@@ -118,11 +141,17 @@ class Elisa {
 	public function __construct()
 	{
 		$this->tags = $this->compileTag($this->tags);
+		$this->dispatcher = new Dispatcher;
 	}
 
 	protected function extend($filePath, array $params = [], $show = true)
 	{
-		$extendData = $this->includeCache($this->setFullCachePathWithMd5($filePath), $params);
+		$fullViewPath  = $this->setFullViewPath($filePath);
+		$fullCachePath = $this->setFullCachePathWithMd5($filePath);
+		
+		$this->writeToCacheIfExpired($fullCachePath, $fullViewPath);
+
+		$extendData = $this->includeCache($fullCachePath, $params);
 
 		if($show === true) {
 			echo $extendData;
@@ -167,7 +196,7 @@ class Elisa {
 
 			preg_match_all('/' . $pattern . '/',$this->data, $matches);
 			$filtredMatches = $this->filterMutliArray($matches);
-
+			
 			if(isset($filtredMatches[0]) && is_array($filtredMatches[0])) {
 
 				foreach($filtredMatches[0] as $matchedTag) {
@@ -179,7 +208,7 @@ class Elisa {
 							$tag
 						], $matchedTag);
 					
-					$this->data  = preg_replace('/' . preg_quote($matchedTag) . '/', $replacedTag, $this->data);
+					$this->data  = preg_replace('~' . preg_quote($matchedTag) . '~', $replacedTag, $this->data);
 				}
 			}
 		}
@@ -211,16 +240,9 @@ class Elisa {
 					throw new \Exception($fullPath . ' not existsing');
 				}
 
-				//exit($this->setFullCachePath($path));
-				// $this->render(file_get_contents($fullPath))
-
 				$this->writeToCache($this->setFullCachePathWithMd5($path), $this->render(file_get_contents($fullPath)));
 
-				if(isset($matches[3][$key]) && !empty($matches[3][$key])) {
-					$stream = str_replace($matches[0][$key], sprintf('<?php $_elisa->extend(\'%s\', %s); ?>', $path, $matches[3][$key]) , $stream);
-				}else{
-					$stream = str_replace($matches[0][$key], sprintf('<?php $_elisa->extend(\'%s\'); ?>', $path) , $stream);
-				}
+				$stream = str_replace($matches[0][$key], sprintf('<?php $_elisa->extend(\'%s\'); ?>', $path) , $stream);
 				
 				preg_match_all('/' . $extendPattern . '/', $stream, $nestedMatches);
 
@@ -383,6 +405,8 @@ class Elisa {
 	protected function includeCache($cacheFullPath, array $params = [])
 	{
 		ob_start();
+		$params = array_merge($this->eachParams, $params);
+
 		foreach($params as $var => $value){
 			$$var = $value;
 		}
@@ -515,7 +539,7 @@ class Elisa {
      *
      * @return string
      */
-	public function composer($path, array $params = [], $show = false)
+	public function composer($path, $show = false)
 	{
 		if(ob_get_level()) ob_end_clean();
 
@@ -535,19 +559,26 @@ class Elisa {
 		// caching scenario
 		if($this->caching && file_exists($cacheFullPath) === true) {
 
-			$cacheData = $this->includeCache($cacheFullPath, $params);
+			$cacheData = $this->includeCache($cacheFullPath, $this->params);
 
+			$this->params = [];
+
+			$this->runEvent('before', $path);
+			
 			if($show) {
 				echo $cacheData;
+				$this->runEvent('after', $path);
+				return;
 			}
 			return $cacheData;
 		}
 
 		// without caching scenario
-		$content= $this->controller($path, $params, false);
-		$master = $this->controller($this->master, $params, false);
+		$content= $this->controller($path, $this->params, false);
+		$master = $this->controller($this->master, $this->params, false);
 		$master = preg_replace('/' . $this->compileTag('%s\s*\@content\s*%s') . '/', $content, $master);
 		
+		// Set the open/close tags
 		$open  = preg_quote($this->open);
 		$close = preg_quote($this->close);
 		
@@ -575,20 +606,62 @@ class Elisa {
 				}
 			}
 
+			// Merges the extended files
 			$master = $this->extendFiles($master);
 
+			$sectionPattern2 = sprintf('(%s\s*\@section\([\'\"]*(.*?)[\'\"]*\)\s*%s([\s\S]*?)%s\s*\@end\s*%s)', $open, $close, $open, $close);
+			
+			// make the single newline of multi newlines
+			$master = preg_replace(['/' . $sectionPattern2 . '/i', '/(\n{2,})/'], ['$3', PHP_EOL], $master);
+
+			// Lastly replaces the matching tags
+			$master = preg_replace('/' . sprintf('%s\s*(.*?)\s*%s', $open, $close) . '/', '<?php $1;?>', $master);
+
 			$this->writeToCache($cacheFullPath, $master);
-			$master = $this->includeCache($cacheFullPath, $params);
+			$master = $this->includeCache($cacheFullPath, $this->params);
 		}
 
-		$sectionPattern2 = sprintf('(%s\s*\@section\([\'\"]*(.*?)[\'\"]*\)\s*%s([\s\S]*?)%s\s*\@end\s*%s)', $open, $close, $open, $close);
-		$master = preg_replace(['/' . $sectionPattern2 . '/i', '/(\n{2,})/'], ['$3', PHP_EOL], $master);
+		$this->params = [];
+
+		// Run the before events
+		$this->runEvent('before', $path);
 
 		if($show) {
 			echo $master;
+			// Run the after events
+			$this->runEvent('after', $path);
 			return;
 		}
 		return $master;
+	}
+
+	public function beforeEvent($name = false, \Closure $event)
+	{
+		if($name) {
+			$this->dispatcher->set('before_' . $name, $event);
+		}
+	}
+
+	public function afterEvent($name = false, \Closure $event)
+	{
+		if($name) {
+			$this->dispatcher->set('after_' . $name, $event);
+		}
+	}
+
+	protected function runEvent($prefix, $name)
+	{
+		$this->dispatcher->run($prefix.'_'.$name);
+	}
+
+	public function clear()
+	{
+		foreach (glob($this->storage."/cache/*.php") as $file) {
+            if (file_exists($file)) {
+                unlink($file);
+            }
+        }
+        return true;
 	}
 
 	/**
@@ -615,8 +688,32 @@ class Elisa {
 	public function show($path, array $params)
 	{
 		echo $this->getContent($path, $params);
+
+		// Run the after events
+		$this->runEvent('after', $path);
 	}
 	
+	public function setup(array $config)
+	{
+		foreach($config as $method => $value) {
+
+			if(! method_exists($this, $method)) {
+				throw new \BadMethodCallException('Call to undefined method ' . __CLASS__ . '::' . $method);
+			}
+			$this->$method($value);
+		}
+	}
+
+	public function with(array $params)
+	{
+		$this->params = $params;
+	}
+
+	public function each(array $params)
+	{
+		$this->eachParams = $params;
+	}
+
 	/**
      * Check the directory
      *
@@ -650,6 +747,9 @@ class Elisa {
 		if(! file_exists($contentFileFullPath)) {
 			throw new \Exception($contentFileFullPath . ' not existsing');
 		}
+
+		// Run the before events
+		$this->runEvent('before', $path);
 
 		return $this->includeCache($contentFilePath, $params);
 	}
