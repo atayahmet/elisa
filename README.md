@@ -197,6 +197,7 @@ $elisa->composer('home.index');
 ###view
 
 Php dosyasının içeriğini direkt olarak bir değişkene aktarmanızı sağlar.
+**Örnek:**
 
 ```php
 $elisa->view('common.sidebar');
@@ -206,16 +207,51 @@ $elisa->view('common.sidebar');
 
 Php dosyasının içeriğini direkt olarak ekrana basmanızı sağlar.
 
+**Örnek:**
 ```php
 $elisa->show('tools.slider');
 ```
 
 ###with
 
+Template ve view dosyalarına parametre göndermenizi sağlar.
+
+**Örnek:**
+```php
+$elisa->with(['name' => 'Ahmet']);
+
+$elisa->composer('home.contet', true);
+```
+
 ###each
+
+Tüm template ve view dosyalarına her zaman gitmesi istediğiniz parametreleri gönderir.
+
+**Örnek:**
+```php
+$elisa->each(['name' => 'Ahmet']);
+```
+
+Parametreler aşağıdaki her iki view dosyasına gönderilecektir.
+
+**Örnek:**
+```php
+$elisa->view('common.header');
+
+$elisa->view('common.footer');
+```
 
 ###clear
 
+Önbellekteki derlenmiş template dosyalarını temizler.
+
+**Örnek:**
+```php
+$elisa->clear();
+```
+
 ###beforeEvent
+
+Dosya isimleri ile kayıt edilmiş event'ler dosyalar işleme alınmadan çalıştırılır.
 
 ###afterEvent
