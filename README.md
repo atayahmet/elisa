@@ -124,8 +124,12 @@ Name        | Description
 ----------- | ------------------------------------------------------- 
 [@content](#@content)     | Sayfamızın gövdesini (body) oluşturan terim.
 [@extend()](#@extend())   | Sayfamızı başka template dosyaları ile genişletir.
-[@section()](#@section()) |
-[@append()](#@append())   |
+[@section()](#@section()) | İçerik alanı oluşturur
+[@append()](#@append())   | Oluştururan içerik alanlarına içerikleri iletir.
+
+##Terimlerin Kullanımı
+
+Kontrol terimleri, yazdırma terimleri ve diğer kullanımlar için linke tıklayınız: [Terimler](#terimler)
 
 #Metod Kullanımları
 
@@ -221,6 +225,12 @@ Template ve view dosyalarına parametre göndermenizi sağlar.
 $elisa->with(['name' => 'Ahmet']);
 
 $elisa->composer('home.contet', true);
+```
+
+**home/content.html:**
+
+```html
+Hello {! $name }
 ```
 
 ###each
@@ -406,3 +416,5 @@ Belirtilen section alanlarına içerik gönderir.
 </script>
 { @end }
 ```
+
+#Terimler
