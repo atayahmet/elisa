@@ -691,7 +691,7 @@ class Elisa {
      */
 	protected function runEvent($prefix, $name)
 	{
-		return $this->dispatcher->run($prefix.'_'.$name);
+		return $this->dispatcher->run($prefix.'_'.$name, $this->params);
 	}
 
 	/**

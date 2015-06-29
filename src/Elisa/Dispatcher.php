@@ -49,10 +49,10 @@ class Dispatcher
        *
        * @return mixed
        */ 
-	public function run($name = false)
+	public function run($name = false, $params = [])
 	{
 		if($name !== false && isset($this->_events[$name])){
-			return $this->_events[$name]();
+			return $this->_events[$name]($params);
 		}
 	}
 
