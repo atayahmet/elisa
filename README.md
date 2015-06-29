@@ -327,7 +327,7 @@ profile.html
 </header>
 
 <footer>
-	{ @extend('profile.footer) }
+	{ @extend('profile.footer') }
 </footer>
 ```
 
@@ -335,4 +335,74 @@ Yukarıda **profile.html** template dosyasına **header** ve **footer** template
 
 ###@section()
 
+Belirteceğiniz section alanlarına başka bir template dosyasından içerik gönderebilirsiniz.
+
+**Örnek:**
+
+master.html:
+
+```html
+<html>
+	
+	<head>
+		{ @section('header') }
+
+		{ @end }
+	</head>
+
+	<body>
+		{ @content }
+		
+		{ @section('footer') }
+
+		{ @end }
+	</body>
+
+</html>
+```
+
+login.html:
+
+```html
+<h1>Login page</h1>
+
+{ @append('header') }
+<title>Login page</title>
+{ @end }
+
+{ @append('footer') }
+<script type="text/javascript">
+	function hello()
+	{
+		alert('Hello World!');
+	}
+</script>
+{ @end }
+```
+
+Yukarıda bir master page dosyamız var ve içinde tanımladığımız iki adet section alanları bulunuyor. 
+
+Sonrasında **login.html** adında bir template dosyası oluşturduk ve **append** metodlarıyla master page alanındaki section'lara içerikler gönderdik.
+
 ###@append()
+
+Belirtilen section alanlarına içerik gönderir.
+
+>**Not:** Yukarıda detaylı örneği bulabilirsiniz.
+
+**Örnek:**
+
+```html
+{ @append('header') }
+<title>Login page</title>
+{ @end }
+
+{ @append('footer') }
+<script type="text/javascript">
+	function hello()
+	{
+		alert('Hello World!');
+	}
+</script>
+{ @end }
+```
