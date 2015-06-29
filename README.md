@@ -254,4 +254,85 @@ $elisa->clear();
 
 Dosya isimleri ile kayıt edilmiş event'ler dosyalar işleme alınmadan çalıştırılır.
 
+>**Not:** Göndereceğiniz parametreler çalıştırılan event'e gönderilecektir.
+
+**Örnek:**
+
+```php
+$elisa->beforeEvent(function($params){
+	
+	// do something...
+
+});
+```
+
 ###afterEvent
+
+Dosya isimleri ile kayıt edilmiş event'ler dosyalar işleme alındıktan sonra çalıştırılır.
+
+>**Not:** **afterEvent** sadece **show()** metodu ile çalışmaktadır.
+
+>**Not:** Göndereceğiniz parametreler çalıştırılan event'e gönderilecektir.
+
+**Örnek:**
+
+```php
+$elisa->afterEvent(function($params){
+	
+	// do something...
+
+});
+```
+
+#Yapılandırıcılar
+
+###@content
+
+Template içeriğinin gövde kısmını oluşturan bir etikettir. Sadece master template sayfasında kullanılabilir.
+
+**Örnek:**
+
+master.html
+```html
+<html>
+	<head>
+		
+	</head>
+
+	<body>
+	{ @content }
+	</body>
+</html>
+```
+
+Master template ile derlemek istediğiniz gövde (body) template dosyasını şu şekilde kullanabilirisiniz:
+
+```php
+$elisa->composer('home.body');
+```
+
+###@extend()
+
+Template sayfalarını genişletmek için yardımcı olur. Bu metod ile hem template dosyası hemde normal bir php dosyasını dahil edebilirsiniz.
+
+Ayrıca bu dosyalara parametreler gönderebilirsiniz.
+
+profile.html
+```html
+
+<h1>User Profile</h1>
+
+<header>
+	{ @extend('profile.header', ['name' => 'Can']) }
+</header>
+
+<footer>
+	{ @extend('profile.footer) }
+</footer>
+```
+
+Yukarıda **profile.html** template dosyasına **header** ve **footer** template dosyalarını dahil ettik. Ayrıca **header** dosyasına bir de parametre gönderdik.
+
+###section()
+
+###append()
