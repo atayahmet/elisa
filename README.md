@@ -333,6 +333,6 @@ profile.html
 
 Yukarıda **profile.html** template dosyasına **header** ve **footer** template dosyalarını dahil ettik. Ayrıca **header** dosyasına bir de parametre gönderdik.
 
-###section()
+###@section()
 
-###append()
+###@append()
