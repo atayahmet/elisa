@@ -189,6 +189,18 @@ Fonksiyon isimlerine kısa isimler yada farklı isimler vererek kendi fonksiyon 
 $elisa->aliases(['length' => 'strlen', 'dump' => 'var_dump']);
 ```
 
+**strlen:**
+
+```php
+{ length('Hello World!') }
+```
+
+**var_dump:**
+
+```php
+{ dump('Hello World!') }
+```
+
 ###composer
 
 Template dosyasını önbellekte yok ise derler (render) ve önbelleğe ekler.
