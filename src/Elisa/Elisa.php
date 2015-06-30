@@ -16,62 +16,67 @@ use Elisa\Dispatcher;
  */
 class Elisa {
 
+	/**
+	 * Separator
+	 * 
+	 * @var string
+	 */
 	protected $separator = DIRECTORY_SEPARATOR;
 
 	/**
-     * Filesystem class
-     * 
-     * @var object
-     */
+	 * Filesystem class
+	 * 
+	 * @var object
+	 */
 	protected $filesystem;
 		
 	/**
-     * Raw data variable
-     * 
-     * @var string
-     */
+	 * Raw data variable
+	 * 
+	 * @var string
+	 */
 	protected $data;
 	
 	/**
-     * Converted data storage path
-     * 
-     * @var string
-     */
+	 * Converted data storage path
+	 * 
+	 * @var string
+	 */
 	protected $storage;
 	
 	/**
-     * Raw data path
-     * 
-     * @var string
-     */
+	 * Raw data path
+	 * 
+	 * @var string
+	 */
 	protected $view;
 
 	/**
-     * Default template file extension
-     * 
-     * @var string
-     */
+	 * Default template file extension
+	 * 
+	 * @var string
+	 */
 	protected $ext = '.html';
 
 	/**
-     * Default master file
-     * 
-     * @var string
-     */
+	 * Default master file
+	 * 
+	 * @var string
+	 */
 	protected $master = 'master';
 
 	/**
-     * Caching status
-     * 
-     * @var bool
-     */
+	 * Caching status
+	 * 
+	 * @var bool
+	 */
 	protected $caching = true;
 
 	/**
-     * Function aliases
-     * 
-     * @var array
-     */
+	 * Function aliases
+	 * 
+	 * @var array
+	 */
 	protected $aliases = [];
 
 	/**
@@ -82,45 +87,45 @@ class Elisa {
 	protected $reserved = ['extend', 'append', 'content'];
 
 	/**
-     * Start tag
-     * 
-     * @var string
-     */
+	 * Start tag
+	 * 
+	 * @var string
+	 */
 	protected $open = '{';
 
 	/**
-     * End tag
-     * 
-     * @var string
-     */
+	 * End tag
+	 * 
+	 * @var string
+	 */
 	protected $close = '}';
 
 	/**
-     * Params Depends
-     * 
-     * @var arrayW
-     */
+	 * Params Depends
+	 * 
+	 * @var arrayW
+	 */
 	protected $params = [];
 
 	/**
-     * Params send to each views 
-     * 
-     * @var array
-     */
+	 * Params send to each views 
+	 * 
+	 * @var array
+	 */
 	protected $eachParams = [];
 
 	/**
-     * Event dispatcher
-     * 
-     * @var object
-     */
+	 * Event dispatcher
+	 * 
+	 * @var object
+	 */
 	protected $dispatcher;
 
 	/**
-     * Elisa Regex patterns
-     * 
-     * @var array
-     */
+	 * Elisa Regex patterns
+	 * 
+	 * @var array
+	 */
 	protected $tags = [
 		"%s(\s*)(if)(\s*)\((.*?)\)(\s*)%s" => '<?php $2($4): ?>',
 		'%s(\s*)(elseif)(\s*)\((.*?)\)(\s*)%s' => '<?php $2($4): ?>',
@@ -145,14 +150,14 @@ class Elisa {
 	}
 
 	/**
-     * Adds the extended file
-     *
-     * @param string $filePath
-     * @param array $params
-     * @param bool $show
-     * 
-     * @return string
-     */
+	 * Adds the extended file
+	 *
+	 * @param string $filePath
+	 * @param array $params
+	 * @param bool $show
+	 * 
+	 * @return string
+	 */
 	protected function extend($filePath, array $params = [], $show = true)
 	{
 		$fullViewPath  = $this->setFullViewPath($filePath);
@@ -170,12 +175,12 @@ class Elisa {
 	}
 
 	/**
-     * Compiles the openning and closing tags
-     *
-     * @param string|array $patterns
-     * 
-     * @return array
-     */
+	 * Compiles the openning and closing tags
+	 *
+	 * @param string|array $patterns
+	 * 
+	 * @return array
+	 */
 	protected function compileTag($patterns)
 	{
 		$left  = preg_quote($this->open);
@@ -196,12 +201,12 @@ class Elisa {
 	}
 
 	/**
-     * Raw data render
-     *
-     * @param string $tpl
-     * 
-     * @return string
-     */
+	 * Raw data render
+	 *
+	 * @param string $tpl
+	 * 
+	 * @return string
+	 */
 	protected function render($tpl)
 	{
 		$this->data = $this->setAliases($tpl);
@@ -230,12 +235,12 @@ class Elisa {
 	}
 
 	/**
-     * Make the extend files (recursive)
-     *
-     * @param string $stream
-     * 
-     * @return string
-     */
+	 * Make the extend files (recursive)
+	 *
+	 * @param string $stream
+	 * 
+	 * @return string
+	 */
 	protected function extendFiles($stream)
 	{
 		$extendPattern = $this->compileTag('%s\s*\@extend\([\'\"]?(.*?)[\'\"]\s*(,)?(.*?)\s*\)\s*%s');
@@ -267,12 +272,12 @@ class Elisa {
 	}
 
 	/**
-     * Replace the aliases funcion name
-     *
-     * @param string $stream
-     * 
-     * @return string
-     */
+	 * Replace the aliases funcion name
+	 *
+	 * @param string $stream
+	 * 
+	 * @return string
+	 */
 	protected function setAliases($stream)
 	{
 		$aliases = implode(array_flip($this->aliases), '|');
@@ -297,48 +302,48 @@ class Elisa {
 	}
 
 	/**
-     * Replace dot from to default separator
-     *
-     * @param string $path
-     *
-     * @return string
-     */
+	 * Replace dot from to default separator
+	 *
+	 * @param string $path
+	 *
+	 * @return string
+	 */
 	protected function setSeparator($path)
 	{
 		return preg_replace('/\./', $this->separator, $path);
 	}
 
 	/**
-     * Make the view file path
-     *
-     * @param string $filePath
-     *
-     * @return string
-     */
+	 * Make the view file path
+	 *
+	 * @param string $filePath
+	 *
+	 * @return string
+	 */
 	protected function setFullViewPath($filePath)
 	{
 		return preg_replace('/\/\//', $this->separator, $this->storage . '/views/' . $filePath) . $this->ext;
 	}
 
 	/**
-     * Make the cache file path
-     *
-     * @param string $filePath
-     *
-     * @return string
-     */
+	 * Make the cache file path
+	 *
+	 * @param string $cacheFileName
+	 *
+	 * @return string
+	 */
 	protected function setFullCachePath($cacheFileName)
 	{
 		return preg_replace('/\/\//', $this->separator, $this->storage . '/cache/' . $cacheFileName) . '.php';
 	}
 
 	/**
-     * Make the cache file path with md5
-     *
-     * @param string $path
-     *
-     * @return string
-     */
+	 * Make the cache file path with md5
+	 *
+	 * @param string $path
+	 *
+	 * @return string
+	 */
 	protected function setFullCachePathWithMd5($path)
 	{
 		$filePath = $this->setSeparator($path);
@@ -349,13 +354,13 @@ class Elisa {
 	}
 
 	/**
-     * controller of multi process
-     *
-     * @param string $path
-     * @param array $params
-     *
-     * @return string
-     */
+	 * controller of multi process
+	 *
+	 * @param string $path
+	 * @param array $params
+	 *
+	 * @return string
+	 */
 	protected function controller($path, array $params = [])
 	{
 		$filePath = $this->setSeparator($path);
@@ -378,13 +383,13 @@ class Elisa {
 	}
 
 	/**
-     * Write to cache file if expired
-     *
-     * @param string $cacheFullPath
-     * @param string $fullPath
-     *
-     * @return void
-     */
+	 * Write to cache file if expired
+	 *
+	 * @param string $cacheFullPath
+	 * @param string $fullPath
+	 *
+	 * @return void
+	 */
 	protected function writeToCacheIfExpired($cacheFullPath, $fullPath)
 	{
 		clearstatcache();
@@ -400,26 +405,26 @@ class Elisa {
 	}
 
 	/**
-     * Write to cache
-     *
-     * @param string $cacheFullPath
-     * @param string $renderedData
-     *
-     * @return int
-     */
+	 * Write to cache
+	 *
+	 * @param string $cacheFullPath
+	 * @param string $renderedData
+	 *
+	 * @return int
+	 */
 	protected function writeToCache($cacheFullPath, $renderedData)
 	{
 		return file_put_contents($cacheFullPath, $renderedData);
 	}
 
 	/**
-     * Adds cache file
-     *
-     * @param string $cacheFullPath
-     * @param array $params
-     *
-     * @return string
-     */
+	 * Adds cache file
+	 *
+	 * @param string $cacheFullPath
+	 * @param array $params
+	 *
+	 * @return string
+	 */
 	protected function includeCache($cacheFullPath, array $params = [])
 	{
 		ob_start();
@@ -438,12 +443,12 @@ class Elisa {
 	}
 
 	/**
-     * Filter multi array
-     *
-     * @param array $matches
-     *
-     * @return array
-     */
+	 * Filter multi array
+	 *
+	 * @param array $matches
+	 *
+	 * @return array
+	 */
 	protected function filterMutliArray(array $matches)
 	{
 		$forMulti = function(array $matched) {
@@ -465,12 +470,12 @@ class Elisa {
 	}
 	
 	/**
-     * Set storage path
-     *
-     * @param string $path
-     *
-     * @return void
-     */
+	 * Set storage path
+	 *
+	 * @param string $path
+	 *
+	 * @return void
+	 */
 	public function storage($path)
 	{
 		$this->existsDir($path, 'storage');
@@ -683,7 +688,7 @@ class Elisa {
      * Sets the before event
      *
      * @param string $name
-     * @param object $event
+     * @param \Closure $event
      * 
      * @return void
      */
@@ -698,7 +703,7 @@ class Elisa {
      * Sets the after event
      *
      * @param string $name
-     * @param object $event
+     * @param \Closure $event
      * 
      * @return void
      */
@@ -831,7 +836,7 @@ class Elisa {
      * @param string $path
      * @param array $params
      * 
-     * @return Exception|string
+     * @return mixed
      */
 	protected function getContent($path, array $params)
 	{
