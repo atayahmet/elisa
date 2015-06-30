@@ -145,7 +145,8 @@ class Elisa {
 
 	public function __construct()
 	{
-		$this->tags = $this->compileTag();
+		$compiledTags = $this->compileTag();
+		$this->tags = $compiledTags;
 		$this->dispatcher = new Dispatcher;
 	}
 
