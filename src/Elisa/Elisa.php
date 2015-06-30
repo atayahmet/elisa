@@ -333,6 +333,13 @@ class Elisa {
 		return preg_replace('/\/\//', $this->separator, $this->storage . '/cache/' . $cacheFileName) . '.php';
 	}
 
+	/**
+     * Make the cache file path with md5
+     *
+     * @param $path string
+     *
+     * @return string
+     */
 	protected function setFullCachePathWithMd5($path)
 	{
 		$filePath = $this->setSeparator($path);
@@ -420,7 +427,7 @@ class Elisa {
 		ob_start();
 		$params = array_merge($this->eachParams, $params);
 
-		foreach($params as $var => $value){
+		foreach($params as $var => $value) {
 			$$var = $value;
 		}
 
@@ -436,6 +443,7 @@ class Elisa {
      * Filter multi array
      *
      * @param $matches array
+     *
      * @return array
      */
 	protected function filterMutliArray(array $matches)
@@ -462,6 +470,7 @@ class Elisa {
      * Set storage path
      *
      * @param $path string
+     *
      * @return void
      */
 	public function storage($path)
@@ -480,7 +489,7 @@ class Elisa {
 	/**
      * Save the function names aliases
      *
-     * @param $path string
+     * @param $aliases array
      *
      * @return void
      */
@@ -500,6 +509,21 @@ class Elisa {
 	{
 		if(preg_match('/^\.[a-zA-Z]+$/i', $ext)) {
 			$this->ext = $ext;
+		}
+	}
+
+	/**
+     * Short tags
+     *
+     * @param $tags array
+     *
+     * @return void
+     */
+	public function tags(array $tags)
+	{
+		if(count($tags) > 1) {
+			$this->open = reset($tags);
+			$this->close = next($tags);
 		}
 	}
 
@@ -597,6 +621,7 @@ class Elisa {
 		
 		$appendPattern = sprintf('%s\s*\@append\([\',\"]*(.*?)[\',\"]*\)\s*%s([\s\S]*?)%s\s*\@end\s*%s', $open, $close, $open, $close);
 		$sectionPattern = '%s\s*\@section\([\'\"]*(%s)[\'\"]*\)\s*%s([\s\S]*?)%s\s*\@end\s*%s';
+
 		preg_match_all('/' . $appendPattern . '/i', $master, $matches);
 		
 		$rawData = [];
