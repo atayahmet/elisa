@@ -147,9 +147,9 @@ class Elisa {
 	/**
      * Adds the extended file
      *
-     * @param $filePath string
-     * @param $params array
-     * @param $show bool
+     * @param string $filePath
+     * @param array $params
+     * @param bool $show
      * 
      * @return string
      */
@@ -172,7 +172,7 @@ class Elisa {
 	/**
      * Compiles the openning and closing tags
      *
-     * @param $patterns string|array
+     * @param string|array $patterns
      * 
      * @return array
      */
@@ -198,8 +198,7 @@ class Elisa {
 	/**
      * Raw data render
      *
-     * @param $tpl string
-     * @param $attr array
+     * @param string $tpl
      * 
      * @return string
      */
@@ -233,7 +232,7 @@ class Elisa {
 	/**
      * Make the extend files (recursive)
      *
-     * @param $strem string
+     * @param string $stream
      * 
      * @return string
      */
@@ -270,7 +269,7 @@ class Elisa {
 	/**
      * Replace the aliases funcion name
      *
-     * @param $strem string
+     * @param string $stream
      * 
      * @return string
      */
@@ -300,7 +299,7 @@ class Elisa {
 	/**
      * Replace dot from to default separator
      *
-     * @param $path string
+     * @param string $path
      *
      * @return string
      */
@@ -312,7 +311,7 @@ class Elisa {
 	/**
      * Make the view file path
      *
-     * @param $filePath string
+     * @param string $filePath
      *
      * @return string
      */
@@ -324,7 +323,7 @@ class Elisa {
 	/**
      * Make the cache file path
      *
-     * @param $filePath string
+     * @param string $filePath
      *
      * @return string
      */
@@ -336,7 +335,7 @@ class Elisa {
 	/**
      * Make the cache file path with md5
      *
-     * @param $path string
+     * @param string $path
      *
      * @return string
      */
@@ -352,9 +351,8 @@ class Elisa {
 	/**
      * controller of multi process
      *
-     * @param $path string
-     * @param $params array
-     * @param $caching bool
+     * @param string $path
+     * @param array $params
      *
      * @return string
      */
@@ -382,8 +380,8 @@ class Elisa {
 	/**
      * Write to cache file if expired
      *
-     * @param $cacheFullPath string
-     * @param $fullPath string
+     * @param string $cacheFullPath
+     * @param string $fullPath
      *
      * @return void
      */
@@ -404,8 +402,8 @@ class Elisa {
 	/**
      * Write to cache
      *
-     * @param $cacheFullPath string
-     * @param $renderedData string
+     * @param string $cacheFullPath
+     * @param string $renderedData
      *
      * @return int
      */
@@ -417,8 +415,8 @@ class Elisa {
 	/**
      * Adds cache file
      *
-     * @param $cacheFullPath string
-     * @param $params array
+     * @param string $cacheFullPath
+     * @param array $params
      *
      * @return string
      */
@@ -442,7 +440,7 @@ class Elisa {
 	/**
      * Filter multi array
      *
-     * @param $matches array
+     * @param array $matches
      *
      * @return array
      */
@@ -469,7 +467,7 @@ class Elisa {
 	/**
      * Set storage path
      *
-     * @param $path string
+     * @param string $path
      *
      * @return void
      */
@@ -489,11 +487,11 @@ class Elisa {
 	/**
      * Save the function names aliases
      *
-     * @param $aliases array
+     * @param array $aliases
      *
      * @return void
      */
-	public function aliases($aliases)
+	public function aliases(array $aliases)
 	{
 		$this->aliases = array_merge($this->aliases, $aliases);
 	}
@@ -501,7 +499,7 @@ class Elisa {
 	/**
      * Set the files extension
      *
-     * @param $ext string
+     * @param string $ext
      *
      * @return void
      */
@@ -515,7 +513,7 @@ class Elisa {
 	/**
      * Short tags
      *
-     * @param $tags array
+     * @param array $tags
      *
      * @return void
      */
@@ -530,7 +528,7 @@ class Elisa {
 	/**
      * Set the master file
      *
-     * @param $master string
+     * @param string $master
      *
      * @return void
      */
@@ -539,6 +537,13 @@ class Elisa {
 		$this->master = !empty($master) ? $master : $this->master;
 	}
 
+	/**
+     * Set the cache status
+     *
+     * @param bool $status
+     *
+     * @return void
+     */
 	public function cache($status = null)
 	{
 		if(is_bool($status)) {
@@ -549,7 +554,8 @@ class Elisa {
 	/**
      * Clear cache file if any different
      *
-     * @param $cacheFullPath string
+     * @param string $cacheFullPath
+     * @param string $contentFilePath
      *
      * @return void
      */
@@ -571,8 +577,8 @@ class Elisa {
 	/**
      * Generate from template file to php file 
      *
-     * @param $path string
-     * @param $params array
+     * @param string $path
+     * @param bool $show
      *
      * @return string
      */
@@ -676,8 +682,8 @@ class Elisa {
 	/**
      * Sets the before event
      *
-     * @param $name string
-     * @param $event object
+     * @param string $name
+     * @param object $event
      * 
      * @return void
      */
@@ -691,8 +697,8 @@ class Elisa {
 	/**
      * Sets the after event
      *
-     * @param $name string
-     * @param $event object
+     * @param string $name
+     * @param object $event
      * 
      * @return void
      */
@@ -706,8 +712,8 @@ class Elisa {
 	/**
      * Sets the after event
      *
-     * @param $prefix string
-     * @param $name string
+     * @param string $prefix
+     * @param string $name
      * 
      * @return mixed
      */
@@ -734,8 +740,8 @@ class Elisa {
 	/**
      * Get view file
      *
-     * @param $path string
-     * @param $params array
+     * @param string $path
+     * @param array $params
      * 
      * @return string
      */
@@ -747,8 +753,8 @@ class Elisa {
 	/**
      * Show view file
      *
-     * @param $path string
-     * @param $params array
+     * @param string $path
+     * @param array $params
      * 
      * @return string
      */
@@ -763,7 +769,7 @@ class Elisa {
 	/**
      * Initializer method
      *
-     * @param $config array
+     * @param array $config
      * 
      * @return void
      */
@@ -781,7 +787,7 @@ class Elisa {
 	/**
      * Sets the specific parameters
      *
-     * @param $params array
+     * @param array $params
      * 
      * @return void
      */
@@ -793,7 +799,7 @@ class Elisa {
 	/**
      * Sets the parameters send to all views
      *
-     * @param $params array
+     * @param array $params
      * 
      * @return void
      */
@@ -805,8 +811,8 @@ class Elisa {
 	/**
      * Check the directory
      *
-     * @param $path string
-     * @param $dirName bool
+     * @param string $path
+     * @param bool $dirName
      * 
      * @return void|Exception
      */
@@ -822,8 +828,8 @@ class Elisa {
 	/**
      * Get the content
      *
-     * @param $path string
-     * @param $params array
+     * @param string $path
+     * @param array $params
      * 
      * @return Exception|string
      */
