@@ -119,7 +119,7 @@ class Elisa {
 	/**
      * Elisa Regex patterns
      * 
-     * @var string
+     * @var array
      */
 	protected $tags = [
 		"%s(\s*)(if)(\s*)\((.*?)\)(\s*)%s" => '<?php $2($4): ?>',
@@ -178,7 +178,6 @@ class Elisa {
      */
 	protected function compileTag($patterns)
 	{
-		$string = false;
 		$left  = preg_quote($this->open);
 		$right = preg_quote($this->close);
 
@@ -240,8 +239,6 @@ class Elisa {
      */
 	protected function extendFiles($stream)
 	{
-		//$extendPattern = $this->compileTag('%s\s*\@extend\([\'\"]?(.*?)[\'\"]?\)\s*%s');
-
 		$extendPattern = $this->compileTag('%s\s*\@extend\([\'\"]?(.*?)[\'\"]\s*(,)?(.*?)\s*\)\s*%s');
 		preg_match_all('/' . $extendPattern . '/', $stream, $matches);
 		
@@ -499,7 +496,7 @@ class Elisa {
      *
      * @return void
      */
-	public function ext($ext = false)
+	public function ext($ext = '')
 	{
 		if(preg_match('/^\.[a-zA-Z]+$/i', $ext)) {
 			$this->ext = $ext;
@@ -513,9 +510,9 @@ class Elisa {
      *
      * @return void
      */
-	public function master($master = false)
+	public function master($master = '')
 	{
-		$this->master = $master ? $master : $this->master;
+		$this->master = !empty($master) ? $master : $this->master;
 	}
 
 	public function cache($status = null)
