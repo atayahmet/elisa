@@ -163,6 +163,16 @@ $elisa->storage('/storage/path/');
 ```php
 $elisa->ext('.html');
 ```
+
+###tags
+
+**setup** metodundan bağımsız açılış ve kapanış tag'lerini değiştirir.
+
+**Örnek:**
+```php
+$elisa->tags(['{{', '}}']);
+```
+
 ###master
 
 **setup** metodundan bağımsız ana template çatı dosyasını tanımlar.
