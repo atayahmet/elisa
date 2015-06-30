@@ -41,6 +41,7 @@ Name     | Type      | Description                                             |
 storage  | string    | Template dosyalarının önbellekte saklanacağı dizin      | /
 cache    | boolean   | Önbellekleme                                            | true
 ext      | string    | Template dosyalarının uzantıları                        | .html
+tags     | array     | Açılış ve kapanış tag'leri                              | { }
 master   | string    | Ana template dosyasının adı                             | master
 
 ##Kullanım
