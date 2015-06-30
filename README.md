@@ -418,3 +418,62 @@ Belirtilen section alanlarına içerik gönderir.
 ```
 
 #Terimler
+
+Elisa'da PHP terimleri direkt olarak kullanılabilir. Kendi tagları arasında gerek döngüler gerekse kontrol yapıları basitce kuygulanabilir.
+
+###if Operatörü
+
+**Örnek 1:**
+
+```html
+{ if($status === true) }
+	<h1>Is logged in!</h1>
+{ endif }
+```
+
+**Örnek 2:**
+
+```html
+{ if($status === true) }
+	<h1>Is logged in!</h1>
+{ else }
+	<h1>Is not logged in!</h1>
+{ endif }
+```
+
+**Örnek 3:**
+```html
+{ if($status == 1) }
+	<span>status: 1</span>
+{ elseif($status == 2) }
+	<span>status: 2</span>
+{ else }
+	<span>--</span>
+{ endif }
+```
+
+###Döngüler (for, foreach, while)
+
+**for:**
+
+```html
+{ for($i=1; $i<=5; $i++) }
+	<h3>{! $i }</h3>
+{ endfor }
+```
+
+**foreach:**
+
+```html
+{ foreach($users as $user) }
+	<div>{! $user['name']} {! $user['surname'] }</div>
+{ endforeach }
+```
+
+**while:**
+
+```html
+{ while($product == $products) }
+	<div>{! $proudct['name']}</div>
+{ endwhile }
+```
