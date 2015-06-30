@@ -145,7 +145,7 @@ class Elisa {
 
 	public function __construct()
 	{
-		$this->tags = $this->compileTag($this->tags);
+		$this->tags = $this->compileTag();
 		$this->dispatcher = new Dispatcher;
 	}
 
@@ -181,7 +181,7 @@ class Elisa {
 	 * 
 	 * @return array
 	 */
-	protected function compileTag($patterns)
+	protected function compileTag($patterns = [])
 	{
 		$left  = preg_quote($this->open);
 		$right = preg_quote($this->close);
@@ -191,6 +191,8 @@ class Elisa {
 		}
 
 		$compiledTags = [];
+		
+		$patterns = array_merge($patterns, $this->tags);
 		
 		foreach($patterns as $pattern => $replacement) {
 			$pattern = sprintf($pattern, $left, $right);
