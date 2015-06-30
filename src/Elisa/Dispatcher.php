@@ -14,41 +14,41 @@ namespace Elisa;
  */
 class Dispatcher
 {
-	/**
-       * All events
-       *
-       * @var array
-       */
-      protected $_events = [];
+    /**
+     * All events
+     *
+     * @var array
+     */
+    protected $_events = [];
+
+    /**
+     * Glad container class
+     *
+     * @var object
+     */
+    protected $container;
 
 	/**
-       * Glad container class
-       *
-       * @var object
-       */
-	protected $container;
-
-	/**
-       * Save the events
-       *
-       * @param string $name
-       * @param Closure $event
-       *
-       * @return void
-       */ 
+     * Save the events
+     *
+     * @param string $name
+     * @param Closure $event
+     *
+     * @return void
+     */ 
 	public function set($name, $event = false)
 	{
 		$this->_events[$name] = $event;
 	}
 
 	/**
-       * Run the one event or all events
-       *
-       * @param string $name
-       * @param mixed $params
-       *
-       * @return mixed
-       */ 
+     * Run the one event or all events
+     *
+     * @param string $name
+     * @param mixed $params
+     *
+     * @return mixed
+     */ 
 	public function run($name = false, $params = [])
 	{
 		if($name !== false && isset($this->_events[$name])){
@@ -57,12 +57,12 @@ class Dispatcher
 	}
 
 	/**
-       * Check the event existing
-       *
-       * @param string $name
-       *
-       * @return bool
-       */ 
+     * Check the event existing
+     *
+     * @param string $name
+     *
+     * @return bool
+     */ 
 	public function has($name)
 	{
 		return isset($this->_events[$name]);
