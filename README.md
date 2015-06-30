@@ -107,6 +107,7 @@ Name        | Description
 [storage](#storage)     | Sadece cache dizinini sınıfa tanımlar.
 [aliases](#aliases)     | Fonksiyonlara kısa isimler atamanızı sağlar.
 [ext](#ext)         | Sadece dosya uzantılarını sınıfa tanımlar.
+[tags](#tags)		| Açılış kapanış tag'lerini değiştirir.
 [master](#master)      | Sadece master page dosyasını sınıfa tanımlar.
 [cache](#cache)       | Sadece cache durumunu sınıfa tanımlar.
 [composer](#composer)    | Template dosyalarını derler. (Render)     
