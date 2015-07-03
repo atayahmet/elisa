@@ -603,9 +603,15 @@ class Elisa {
 		$contentFilePath = $this->setSeparator($path);
 		$contentFileFullPath = $this->setFullViewPath($contentFilePath);
 
+		// content file check and clear process
 		$cacheFileName = md5($contentFileFullPath);
 		$cacheFullPath = $this->setFullCachePath($cacheFileName);
 		$this->clearCacheIfRefreshed($contentFileFullPath, $cacheFullPath);
+
+		// master page file check and clear process
+		$masterFilePath = $this->setSeparator($this->master);
+		$masterFileFullPath = $this->setFullViewPath($masterFilePath);
+		$this->clearCacheIfRefreshed($masterFileFullPath, $cacheFullPath);
 
 		// caching scenario
 		if($this->caching && file_exists($cacheFullPath) === true) {
