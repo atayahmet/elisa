@@ -401,6 +401,7 @@ class Elisa {
 		$currentDate  = time() - 60;
 
 		if($modifiedDate > $currentDate) {
+			$this->clear();
 			$rawData  = file_get_contents($fullPath);
 			$rendered = $this->render($rawData);
 			file_put_contents($cacheFullPath, $rendered);
@@ -577,7 +578,7 @@ class Elisa {
 			$currentDate  = time() - 60;
 
 			if($modifiedDate > $currentDate) {
-				unlink($cacheFullPath);
+				$this->clear();
 			}
 		}
 	}
