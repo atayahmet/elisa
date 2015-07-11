@@ -323,9 +323,9 @@ class Elisa {
 	 *
 	 * @return string
 	 */
-	protected function setFullViewPath($filePath)
+	protected function setFullViewPath($filePath, $ext = false)
 	{
-		return preg_replace('/\/\//', $this->separator, $this->storage . '/views/' . $filePath) . $this->ext;
+		return preg_replace('/\/\//', $this->separator, $this->storage . '/views/' . $filePath) . (!$ext ? $this->ext : $ext);
 	}
 
 	/**
@@ -760,9 +760,9 @@ class Elisa {
      * 
      * @return string
      */
-	public function view($path, array $params)
+	public function view($path)
 	{
-		return $this->getContent($path, $params);
+		return $this->getContent($path);
 	}
 
 	/**
@@ -773,9 +773,9 @@ class Elisa {
      * 
      * @return string
      */
-	public function show($path, array $params)
+	public function show($path)
 	{
-		echo $this->getContent($path, $params);
+		echo $this->getContent($path);
 
 		// Run the after events
 		$this->runEvent('after', $path);
@@ -848,10 +848,10 @@ class Elisa {
      * 
      * @return mixed
      */
-	protected function getContent($path, array $params)
+	protected function getContent($path)
 	{
 		$contentFilePath = $this->setSeparator($path);
-		$contentFileFullPath = $this->setFullViewPath($contentFilePath);
+		$contentFileFullPath = $this->setFullViewPath($contentFilePath, '.php');
 
 		if(! file_exists($contentFileFullPath)) {
 			throw new \Exception($contentFileFullPath . ' not existsing');
@@ -860,6 +860,6 @@ class Elisa {
 		// Run the before events
 		$this->runEvent('before', $path);
 
-		return $this->includeCache($contentFilePath, $params);
+		return $this->includeCache($contentFileFullPath, $this->params);
 	}
 }
